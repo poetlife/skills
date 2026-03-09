@@ -61,3 +61,5 @@ Triggered by: "记住……", "帮我记录……", `/add-user-memory <content>`
 ## 用户指定记忆
 
 > **重要约束**：本节内容由用户人工维护。AI 在修改、删除或重组本节任何内容之前，**必须先征得用户明确同意**。未经用户许可，不得擅自变更此处的任何条目。
+
+- 创建新 skill 或修改 skill 功能后，需要在 CODEBUDDY.md 的 `## Available Skills` 节中同步更新对应说明
