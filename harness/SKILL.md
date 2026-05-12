@@ -81,7 +81,13 @@ harness 只负责创建以下约定文件，其余目录结构由语言 referenc
 
 #### `docs/observability.md` — 可观测性基础设施总览
 
-应用 [templates/observability.md](templates/observability.md) 生成，按实际技术选型填写框架名称。
+应用 [templates/observability.md](templates/observability.md) 生成，按技术栈替换日志框架占位符：
+
+| 技术栈 | 日志框架 |
+|--------|---------|
+| Java / Spring Boot | SLF4J + Logback |
+| Node.js / TypeScript | Winston |
+| Python | loguru |
 
 #### `docs/testing.md` — 测试指南
 
