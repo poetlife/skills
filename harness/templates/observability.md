@@ -4,8 +4,26 @@
 
 ## 日志（Logging）
 
-- 框架：<如 SLF4J+Logback / Winston / structlog>
-- 格式：结构化 JSON
+- 框架：<如 pino / loguru / zap>
+- 格式：
+  - 控制台：人类可读的纯文本（含时间戳、级别、消息）
+  - 文件：结构化 JSON，每行一条记录（JSON Lines）
+- JSON Schema（文件输出字段定义）：
+  ```json
+  {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "required": ["timestamp", "level", "message"],
+    "properties": {
+      "timestamp": { "type": "string", "format": "date-time", "description": "ISO 8601 UTC 时间" },
+      "level":     { "type": "string", "enum": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] },
+      "message":   { "type": "string" },
+      "logger":    { "type": "string", "description": "logger 名称 / 模块路径" },
+      "trace_id":  { "type": "string", "description": "链路追踪 ID，无则省略" },
+      "extra":     { "type": "object", "description": "业务自定义字段，任意键值对" }
+    }
+  }
+  ```
 - 级别约定：ERROR=需要立即处理的故障；WARN=可恢复的异常；INFO=关键业务事件；DEBUG=开发调试
 
 ## 指标（Metrics）
