@@ -13,13 +13,13 @@
   {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "type": "object",
-    "required": ["timestamp", "level", "message"],
+    "required": ["timestamp", "level", "message", "trace_id"],
     "properties": {
       "timestamp": { "type": "string", "format": "date-time", "description": "ISO 8601 UTC 时间" },
       "level":     { "type": "string", "enum": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] },
       "message":   { "type": "string" },
       "logger":    { "type": "string", "description": "logger 名称 / 模块路径" },
-      "trace_id":  { "type": "string", "description": "链路追踪 ID，无则省略" },
+      "trace_id":  { "type": "string", "description": "链路追踪 ID，用于串联同一请求的事件链" },
       "extra":     { "type": "object", "description": "业务自定义字段，任意键值对" }
     }
   }
