@@ -52,6 +52,14 @@ Detection order: `CODEBUDDY.md` → `CLAUDE.md` → `AGENTS.md` → create `CODE
 
 Triggered by: "记住……", "帮我记录……", `/add-user-memory <content>`, or `$ARGUMENTS`.
 
+### `harness`
+
+按照用户习惯初始化新项目骨架。自动创建目录结构、代码规范配置文件、`.gitignore`、`README.md`，并执行 `git init`。
+
+支持技术栈：Java/Spring Boot、Node.js/TypeScript、Python 及前端框架。
+
+Triggered by: "初始化项目"、"起一个架子"、"帮我搭个新项目"、"harness"、"scaffold"、"init project".
+
 ## Adding New Skills
 
 1. Create a directory: `skills/<skill-name>/`
