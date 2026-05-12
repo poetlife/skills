@@ -85,8 +85,7 @@ harness 只负责创建以下约定文件，其余目录结构由语言 referenc
 
 | 技术栈 | 日志框架 |
 |--------|---------|
-| Java / Spring Boot | SLF4J + Logback |
-| Node.js / TypeScript | Winston |
+| Node.js / TypeScript | pino |
 | Python | loguru |
 
 #### `docs/testing.md` — 测试指南
