@@ -1,10 +1,60 @@
 ---
 name: harness
-description: 按照用户的习惯初始化一个新项目的骨架（harness）。当用户说"初始化项目"、"起一个项目架子"、"帮我搭个新项目"、"harness"、"scaffold"、"create project structure"、"init project" 时触发本 skill。自动创建目录结构、配置代码规范、生成基础配置文件，让项目可以立即开始开发。
+description: 按照用户的习惯搭建或修改项目骨架（harness）。支持全新项目和已有项目：新项目完整创建目录结构、配置代码规范、生成基础配置文件；已有项目先扫描现状，补充缺失部分或按需修改骨架结构，不覆盖已有内容。当用户说"初始化项目"、"起一个项目架子"、"帮我搭个新项目"、"修改项目骨架"、"更新 harness"、"harness"、"scaffold"、"create project structure"、"init project" 时触发本 skill。
 allowed-tools: Read, Write, Edit, Bash, Glob
 ---
 
-# Harness — 项目初始化
+# Harness — 项目骨架与文档体系管理
+
+你是项目文档体系的统一操作入口。用户通过 `/harness` 显式触发你，你需要先**识别用户意图**，再执行对应操作。
+
+## 意图识别
+
+根据用户提供的上下文，判断属于以下哪种情境，然后跳转到对应章节执行：
+
+| 情境关键词 | 执行章节 |
+|-----------|---------|
+| 新项目、初始化、scaffold、搭架子 | → [初始化流程](#初始化流程) |
+| 已有项目补全、缺少文档、harness 不完整 | → [初始化流程](#初始化流程)（已有项目模式） |
+| 设计新功能、写 spec、新模块 | → [写设计文档](#写设计文档) |
+| 排查完问题、记录 bug、debugging | → [记录排障](#记录排障) |
+| 更新可观测性、日志规范变了 | → [更新文档](#更新文档) |
+| 修改 harness 约定、调整模板或规范 | → [修改骨架约定](#修改骨架约定) |
+
+若意图不明确，直接询问用户想做什么，给出上表中的选项。
+
+---
+
+## 写设计文档
+
+1. 询问模块名称（若未提供）
+2. 检查 `docs/design/` 下是否已有同名文件，避免重复创建
+3. 应用 [templates/design.md](templates/design.md)，填写模块名，其余占位符留给用户填写
+4. 若同名模块已存在 spec，询问是更新还是拆分子模块
+
+## 记录排障
+
+1. 询问症状简述（若未提供），用于文件命名
+2. **先检索** `docs/debugging/registry.md`，确认是否已有同质症状的既有结论；若有，告知用户并询问是补充已有记录还是新建
+3. 以 `<YYYY-MM-DD>-<症状简述>.md` 命名，应用 [templates/debugging-record.md](templates/debugging-record.md) 生成文件到 `docs/debugging/records/`
+4. 在 `docs/debugging/registry.md` 补登一行（症状关键词、根因摘要、文件链接）
+
+## 更新文档
+
+根据用户描述，定位到对应文档文件，直接编辑更新。常见目标：
+
+- `docs/observability.md` — 可观测性规范
+- `docs/testing.md` — 测试指南
+- `docs/ssot-registry.md` — SSOT 注册表
+- `docs/design/<module>.md` — 模块 spec
+
+## 修改骨架约定
+
+用户想调整 harness 本身的模板或规范时（如修改 `templates/` 下的文件、调整目录结构约定），直接按用户指示编辑对应文件。修改后确认是否需要同步更新已有项目中的已生成文件。
+
+---
+
+## 初始化流程
 
 你的任务是按照用户的习惯，为项目搭建或补全骨架，让用户可以立即开始开发。**项目可能是全新的，也可能是已有项目**——两种情况都需要支持。
 

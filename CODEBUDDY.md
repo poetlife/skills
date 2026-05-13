@@ -54,11 +54,11 @@ Triggered by: "记住……", "帮我记录……", `/add-user-memory <content>`
 
 ### `harness`
 
-为项目搭建或补全骨架——支持全新项目和已有项目。新项目完整创建目录结构、代码规范配置文件、文档体系；已有项目先扫描现状，只补充缺失部分，不覆盖已有内容。
+为项目搭建或修改骨架——支持全新项目和已有项目。新项目完整创建目录结构、代码规范配置文件、文档体系；已有项目先扫描现状，补充缺失部分或按需修改骨架结构，不覆盖已有内容。
 
 支持技术栈：Java/Spring Boot、Node.js/TypeScript、Python 及前端框架。
 
-Triggered by: "初始化项目"、"起一个架子"、"帮我搭个新项目"、"harness"、"scaffold"、"init project"、"补全项目骨架".
+Triggered by: "初始化项目"、"起一个架子"、"帮我搭个新项目"、"修改项目骨架"、"更新 harness"、"harness"、"scaffold"、"init project"、"补全项目骨架".
 
 ## Adding New Skills
 
