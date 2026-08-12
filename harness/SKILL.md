@@ -1,6 +1,6 @@
 ---
 name: harness
-description: 按照用户的习惯搭建或修改项目骨架（harness）。支持全新项目和已有项目：新项目完整创建目录结构、配置代码规范、生成基础配置文件；已有项目先扫描现状，补充缺失部分或按需修改骨架结构，不覆盖已有内容。当用户说"初始化项目"、"起一个项目架子"、"帮我搭个新项目"、"修改项目骨架"、"更新 harness"、"harness"、"scaffold"、"create project structure"、"init project" 时触发本 skill。
+description: 按照用户的习惯搭建或修改项目骨架（harness），并维护设计、排障、可观测性与持续进化文档体系。支持全新/已有项目补全，也支持基于 telemetry、日志、排障记录、反馈等证据生成进化分析，将候选项路由为需求、缺陷、文档或 skill 改进并跟踪验证闭环。当用户说“初始化项目”“起项目架子”“修改项目骨架”“更新 harness”“持续改进”“进化分析”“复盘使用数据”“从 telemetry 提需求/bug”“harness”“scaffold”“init project”时使用本 skill。
 allowed-tools: Read, Write, Edit, Bash, Glob
 ---
 
@@ -19,6 +19,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob
 | 设计新功能、写 spec、新模块 | → [写设计文档](#写设计文档) |
 | 开始排查问题、debugging、报错了想查 | → [开始排障](#开始排障) |
 | 排查完问题、记录 bug、复盘 | → [记录排障](#记录排障) |
+| 进化、持续改进、分析 telemetry、从数据提需求/bug | → [运行进化循环](#运行进化循环) |
 | 更新可观测性、日志规范变了 | → [更新文档](#更新文档) |
 | 修改 harness 约定、调整模板或规范 | → [修改骨架约定](#修改骨架约定) |
 
@@ -56,6 +57,18 @@ allowed-tools: Read, Write, Edit, Bash, Glob
 - `docs/testing.md` — 测试指南
 - `docs/ssot-registry.md` — SSOT 注册表
 - `docs/design/<module>.md` — 模块 spec
+
+## 运行进化循环
+
+进化是一个跨周期长程任务：收集事实数据，形成分析快照，把证据充分的候选项路由到需求、缺陷、文档或 skill 改进，实施后用下一周期数据验证。运行前完整读取 [references/evolution.md](references/evolution.md)，按其中的状态机、证据门槛和恢复规则执行。
+
+入口按用户意图选择：
+
+- 用户要“看最近数据/形成报告”：执行收集与分析，生成周期报告并更新 registry。
+- 用户要“从报告提需求/bug”：先检索 registry 和外部系统去重，再生成工作项草稿；任何外部写入都需用户确认，当前工具不支持创建时只交付草稿。
+- 用户要“回看改进效果/继续 loop”：从 registry 读取待验证项，使用预先登记的指标和时间窗对比基线，记录 validated / ineffective / inconclusive 结论，再开启下一周期。
+
+不得跳过数据质量检查，也不得把一次失败或没有证据的主观判断直接变成工作项。
 
 ## 修改骨架约定
 
@@ -106,6 +119,9 @@ harness 只负责创建以下约定文件，其余目录结构由语言 referenc
 │   ├── debugging/
 │   │   ├── registry.md       # 应用 templates/debugging-registry.md 生成
 │   │   └── records/          # 历史排障记录，初始为空目录
+│   ├── evolution/
+│   │   ├── registry.md       # 应用 templates/evolution-registry.md 生成
+│   │   └── reports/          # 周期分析快照，初始为空目录
 │   ├── observability.md      # 应用 templates/observability.md 生成
 │   ├── testing.md            # 应用 templates/testing.md 生成
 │   └── ssot-registry.md      # 应用 templates/ssot-registry.md 生成
@@ -143,6 +159,10 @@ harness 只负责创建以下约定文件，其余目录结构由语言 referenc
 初始为空目录。每次排查完问题后，以 `<YYYY-MM-DD>-<症状简述>.md` 命名，应用 [templates/debugging-record.md](templates/debugging-record.md) 生成记录，并在 `docs/debugging/registry.md` 补登一行。
 
 **查问题前必须先检索 [`docs/debugging/registry.md`](templates/debugging-registry.md)**，确认是否有同质症状的既有结论——同一个症状不应在仓库里出现两套排查结论（SSOT 原则的延伸）。
+
+#### `docs/evolution/` — 持续进化记录
+
+应用 [templates/evolution-registry.md](templates/evolution-registry.md) 生成 `registry.md`，`reports/` 初始为空。周期分析应用 [templates/evolution-report.md](templates/evolution-report.md)，创建需求/缺陷草稿时应用 [templates/evolution-work-item.md](templates/evolution-work-item.md)。registry 是候选项状态、外部工作项链接和验证结论的唯一信源；报告是按周期生成的不可变证据快照。具体执行协议见 [references/evolution.md](references/evolution.md)。
 
 #### `docs/observability.md` — 可观测性基础设施总览
 

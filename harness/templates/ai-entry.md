@@ -15,6 +15,7 @@
 | 测试指南 | [docs/testing.md](docs/testing.md) | 测试目录规范与运行命令 |
 | SSOT 注册表 | [docs/ssot-registry.md](docs/ssot-registry.md) | 同一件事唯一入口的登记表 |
 | 历史排障记录 | [docs/debugging/registry.md](docs/debugging/registry.md) | 查问题前先检索同质症状 |
+| 持续进化索引 | [docs/evolution/registry.md](docs/evolution/registry.md) | 从事实数据到改进验证的跨周期状态 |
 
 > 功能设计文档位于 `docs/design/`，每个模块一个文件。新增模块时在此表格追加一行。
 
