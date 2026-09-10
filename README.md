@@ -31,6 +31,16 @@ skills/
 
 **触发方式：** "记住……"、"帮我记录……"、"以后要记得……"、"remember that"、"keep in mind"、`/add-user-memory <内容>`
 
+### `goal-to-prompt`
+
+提供“写入”和“检索使用”两个入口：按一类事情记录不同条件下的处理方案、关键流程及提示词，使用时根据当前输入选择合适路线。支持逐步沉淀个人经验。
+
+**写入方式：** `/goal-to-prompt 记下这件事的处理方式：简单情况用方案 A，复杂情况用方案 B。`
+
+**检索方式：** `/goal-to-prompt 找一下这件事以前怎么做，根据当前输入选方案并给出提示词。`
+
+默认记录库为 `~/.local/share/goal-to-prompt`，每条记录存于 `records/<record-id>.md`。可以说“把记录库设置为 /指定目录”持久配置，也可临时指定目录；检索默认只读。目录配置与存取约定见 [本地存储说明](goal-to-prompt/references/local-store.md)。
+
 ## 新增 Skill
 
 1. 创建目录 `skills/<skill-name>/`

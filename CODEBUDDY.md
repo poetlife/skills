@@ -60,6 +60,12 @@ Triggered by: "记住……", "帮我记录……", `/add-user-memory <content>`
 
 Triggered by: "初始化项目"、"起一个架子"、"帮我搭个新项目"、"修改项目骨架"、"更新 harness"、"harness"、"scaffold"、"init project"、"补全项目骨架".
 
+### `goal-to-prompt`
+
+提供写入与检索使用两个入口：每类事情保存一份记录，包含不同条件下的处理方案、选择规则、关键流程与 AI 提示词；使用时按当前输入选方案。记录可复用做法及个人经验，不管理单次项目进度。默认目录为 `~/.local/share/goal-to-prompt`，支持持久配置及本次目录覆盖。
+
+Triggered by: “记下这件事怎么做”、“简单情况用这个，复杂情况用那个”、“找以前的处理方案”、“这个素材该用哪种方案”、`/goal-to-prompt`。
+
 ## Adding New Skills
 
 1. Create a directory: `skills/<skill-name>/`
