@@ -1,26 +1,24 @@
 ---
 name: harness
-description: 按照用户的习惯搭建或修改项目骨架（harness），并维护设计、排障、可观测性与持续进化文档体系。支持全新/已有项目补全，也支持基于 telemetry、日志、排障记录、反馈等证据生成进化分析，将候选项路由为需求、缺陷、文档或 skill 改进并跟踪验证闭环。当用户说“初始化项目”“起项目架子”“修改项目骨架”“更新 harness”“持续改进”“进化分析”“复盘使用数据”“从 telemetry 提需求/bug”“harness”“scaffold”“init project”时使用本 skill。
+description: 搭建或补全项目骨架（harness），维护设计、程序化验证（evaluation）、排障、可观测性与持续进化（evolution）闭环。用于初始化/补全项目、修改骨架、定义形式化验证与 eval、排障复盘、基于 telemetry 进化分析或 /harness、scaffold、init project。
 allowed-tools: Read, Write, Edit, Bash, Glob
 ---
 
 # Harness — 项目骨架与文档体系管理
 
-你是项目文档体系的统一操作入口。用户通过 `/harness` 显式触发你，你需要先**识别用户意图**，再执行对应操作。
+你是项目文档与验证体系的统一操作入口。用户触发你后，先**识别用户意图**，再执行对应章节或按需读取 reference。
 
 ## 意图识别
 
-根据用户提供的上下文，判断属于以下哪种情境，然后跳转到对应章节执行：
-
-| 情境关键词 | 执行章节 |
+| 情境关键词 | 执行入口 |
 |-----------|---------|
-| 新项目、初始化、scaffold、搭架子 | → [初始化流程](#初始化流程) |
-| 已有项目补全、缺少文档、harness 不完整 | → [初始化流程](#初始化流程)（已有项目模式） |
+| 新项目、初始化、scaffold、搭架子、已有项目补全 | → [初始化与补全项目](#初始化与补全项目) |
 | 设计新功能、写 spec、新模块 | → [写设计文档](#写设计文档) |
+| 定义验证目标、形式化验收、写/改 eval 评测 | → [需求验证与评测（Evaluation）](#需求验证与评测evaluation) |
 | 开始排查问题、debugging、报错了想查 | → [开始排障](#开始排障) |
 | 排查完问题、记录 bug、复盘 | → [记录排障](#记录排障) |
 | 进化、持续改进、分析 telemetry、从数据提需求/bug | → [运行进化循环](#运行进化循环) |
-| 更新可观测性、日志规范变了 | → [更新文档](#更新文档) |
+| 更新可观测性、日志/测试/验证规范变了 | → [更新文档](#更新文档) |
 | 修改 harness 约定、调整模板或规范 | → [修改骨架约定](#修改骨架约定) |
 
 若意图不明确，直接询问用户想做什么，给出上表中的选项。
@@ -29,7 +27,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob
 
 ## 项目阶段
 
-项目入口文件（`CODEBUDDY.md` / `CLAUDE.md` / `AGENTS.md`）里的 `project-stage` 是「能不能做破坏性变化」的唯一标志。改 spec、改对外行为、重命名或删除公共入口之前，先读这一行。
+项目入口文件（`CODEBUDDY.md` / `CLAUDE.md` / `AGENTS.md`）里的 `project-stage` 是「能不能做破坏性变化」的唯一标志。改 spec、改既有验证断言、改对外行为、重命名或删除公共入口之前，先读这一行。
 
 三档只在本技能对照。写入项目时只落已选定的那一档，不要把整张表抄进入口文件。
 
@@ -51,173 +49,59 @@ allowed-tools: Read, Write, Edit, Bash, Glob
 
 本标志约束的是后续对既有契约的改动。初始化时「已有文件不覆盖」仍然有效，不因 `greenfield` 而覆盖已有内容。
 
+## 初始化与补全项目
+
+支持全新项目搭建与已有项目增量补全（不覆盖已有文件）。执行前完整读取 [references/init.md](references/init.md)，按其中的信息收集、目录结构、技术栈规范与模板清单落地。
+
 ## 写设计文档
 
-1. 读取项目入口文件的 `project-stage`（见 [项目阶段](#项目阶段)）。`compatible` 下不得写入破坏既有行为的 spec；`confirm` 下先确认再写；`greenfield` 下可以直接写，仍须在 spec 里写明新行为。入口没有该标志时，先按该节补齐再动笔。
-2. 询问模块名称（若未提供）
-3. 检查 `docs/design/` 下是否已有同名文件，避免重复创建
-4. 应用 [templates/design.md](templates/design.md)，填写模块名，其余占位符留给用户填写
-5. 若同名模块已存在 spec，询问是更新还是拆分子模块
+1. 读取项目入口文件的 `project-stage`（见 [项目阶段](#项目阶段)）。`compatible` 下不得写入破坏既有行为与既有验证契约的 spec；`confirm` 下先确认再写；`greenfield` 下可以直接写，仍须在 spec 里写明新行为。入口没有该标志时，先按该节补齐再动笔。
+2. 询问模块名称（若未提供），并确认当前已知的**明确验证目标**（若用户未提供，先对齐可检验目标草案，再动笔写 spec；后续协作中发现的新约束可随时追加）。
+3. 检查 `docs/design/` 下是否已有同名文件，避免重复创建。
+4. 应用 [templates/design.md](templates/design.md)，填写模块名与验证目标，将验证目标形式化到「验证目标与形式化契约」节，其余占位符留给用户补充或共同确认。
+5. 若同名模块已存在 spec，询问是更新还是拆分子模块；若涉及行为变更，同时明确对应程序化验证（单测、集成测试、黑盒或 `evals/`）中需要新增或同步演化的项。
+
+## 需求验证与评测（Evaluation）
+
+验证是贯穿项目全生命周期的自动化裁判，不绑定单一测试形态（载体可以是单元测试、集成测试、黑盒/E2E 校验、评测基准或运行期脚本）。初始目标与对话协作中纠正的错误逻辑都应形式化、程序化沉淀，使后续代码改动与需求演进均可自动验证。运行前完整读取 [references/evaluation.md](references/evaluation.md)。
+
+常见入口：
+
+- **新需求 / 需求变更**：对齐验证目标 → 形式化写入 `docs/design/` → 选用合适载体落地/同步演化可执行验证 → 实现至全绿。
+- **对话中纠偏**：用户指出 AI 的错误逻辑或需锁死的约束时，修复并当场补一条程序化验证锁死。
+- **代码重构 / 优化（需求不变）**：既有验证为只读回归裁判，全量通过即证明未破坏行为；严禁无依据降标。
+- **补全已有项目验证体系**：扫描既有测试与高风险路径，生成 `docs/evaluation.md` 索引并补齐关键入口。
 
 ## 开始排障
 
 用户描述了症状但还没排查时，**先检索既有结论**，避免重复劳动：
 
-1. 读取 `docs/debugging/registry.md`，按症状关键词匹配既有记录
-2. 若命中：告知用户既有结论与对应记录文件路径，询问是否复用；如复用后仍未解决，再进入新一轮排查
-3. 若未命中：协助用户排查；问题解决后跳转到 [记录排障](#记录排障) 登记
+1. 读取 `docs/debugging/registry.md`，按症状关键词匹配既有记录。
+2. 若命中：告知用户既有结论与对应记录文件路径，询问是否复用；如复用后仍未解决，再进入新一轮排查。
+3. 若未命中：协助用户排查；问题解决后跳转到 [记录排障](#记录排障) 登记。
 
 ## 记录排障
 
-1. 询问症状简述（若未提供），用于文件命名
-2. **先检索** `docs/debugging/registry.md`，确认是否已有同质症状的既有结论；若有，告知用户并询问是补充已有记录还是新建
-3. 以 `<YYYY-MM-DD>-<症状简述>.md` 命名，应用 [templates/debugging-record.md](templates/debugging-record.md) 生成文件到 `docs/debugging/records/`
-4. 在 `docs/debugging/registry.md` 补登一行（症状关键词、根因摘要、文件链接）
+1. 询问症状简述（若未提供），用于文件命名。
+2. **先检索** `docs/debugging/registry.md`，确认是否已有同质症状的既有结论；若有，告知用户并询问是补充已有记录还是新建。
+3. 以 `<YYYY-MM-DD>-<症状简述>.md` 命名，应用 [templates/debugging-record.md](templates/debugging-record.md) 生成文件到 `docs/debugging/records/`。
+4. 确认该故障已沉淀为可复跑的回归验证用例（单测、集成或 `evals/`），并将路径记入「预防措施」；暂无法程序化时写明原因。
+5. 在 `docs/debugging/registry.md` 补登一行（症状关键词、根因摘要、文件链接）。
 
 ## 更新文档
 
-根据用户描述，定位到对应文档文件，直接编辑更新。若改动会改变 `docs/design/` 里已声明的行为，先按 [项目阶段](#项目阶段) 处理。常见目标：
-
-- `docs/observability.md` — 可观测性规范
-- `docs/testing.md` — 测试指南
-- `docs/ssot-registry.md` — SSOT 注册表
-- `docs/design/<module>.md` — 模块 spec
+根据用户描述定位到对应文档直接更新。若改动会影响 `docs/design/` 已声明的行为或既有验证契约，先按 [项目阶段](#项目阶段) 处理。常见目标：`docs/observability.md`、`docs/evaluation.md`、`docs/testing.md`、`docs/ssot-registry.md`、`docs/design/<module>.md`。
 
 ## 运行进化循环
 
-进化是一个跨周期长程任务：收集事实数据，形成分析快照，把证据充分的候选项路由到需求、缺陷、文档或 skill 改进，实施后用下一周期数据验证。运行前完整读取 [references/evolution.md](references/evolution.md)，按其中的状态机、证据门槛和恢复规则执行。
+进化是跨周期长程任务：收集事实数据，形成分析快照，把证据充分的候选项路由到需求、缺陷、文档、回归 eval 或 skill 改进，实施后用可复跑的同口径验证脚本对比基线。运行前完整读取 [references/evolution.md](references/evolution.md)，按其中的状态机、证据门槛、程序化验证和恢复规则执行。
 
-入口按用户意图选择：
+- **看最近数据 / 形成报告**：执行收集与分析，生成周期报告并更新 registry。
+- **从报告提需求 / bug**：先查 registry 和外部系统去重，再生成工作项草稿（含回归 eval 与可复跑验证命令）；外部写入须用户确认。
+- **回看改进效果 / 继续 loop**：执行预先登记的可复跑验证命令对比基线，记录 `validated / ineffective / inconclusive`，并将已确认线上失败模式回流离线验证。
 
-- 用户要“看最近数据/形成报告”：执行收集与分析，生成周期报告并更新 registry。
-- 用户要“从报告提需求/bug”：先检索 registry 和外部系统去重，再生成工作项草稿；任何外部写入都需用户确认，当前工具不支持创建时只交付草稿。
-- 用户要“回看改进效果/继续 loop”：从 registry 读取待验证项，使用预先登记的指标和时间窗对比基线，记录 validated / ineffective / inconclusive 结论，再开启下一周期。
-
-不得跳过数据质量检查，也不得把一次失败或没有证据的主观判断直接变成工作项。
+不得跳过数据质量检查，也不得把一次失败或无证据的主观判断直接变成工作项。
 
 ## 修改骨架约定
 
-用户想调整 harness 本身的模板或规范时（如修改 `templates/` 下的文件、调整目录结构约定），直接按用户指示编辑对应文件。修改后确认是否需要同步更新已有项目中的已生成文件。
-
----
-
-## 初始化流程
-
-你的任务是按照用户的习惯，为项目搭建或补全骨架，让用户可以立即开始开发。**项目可能是全新的，也可能是已有项目**——两种情况都需要支持。
-
-## 第一步：收集信息 & 感知现状
-
-如果用户没有提供足够信息，先询问：
-
-1. **项目名称**（目录名）
-2. **技术栈**（Java/Spring Boot、Node.js/TypeScript、Python、前端框架等）
-3. **项目类型**（REST API、Web 应用、CLI 工具、库/SDK 等）
-4. **目标目录**（默认当前目录）
-5. **AI 工具**（用于确定项目入口文件名，见下方规则）
-6. **项目阶段**（`project-stage`）。取值与默认规则见 [项目阶段](#项目阶段)
-
-**已有项目的处理原则**：若目标目录已存在项目（有代码、配置或部分文档），先用 Glob/Read 扫描现状，识别哪些 harness 约定文件已存在、哪些缺失，然后**只补充缺失部分，不覆盖已有内容**。
-
-**项目入口文件名规则**（按优先级检测当前环境）：
-
-| AI 工具 | 入口文件 |
-|---------|---------|
-| CodeBuddy Code | `CODEBUDDY.md` |
-| Claude Code | `CLAUDE.md` |
-| OpenAI Codex CLI | `AGENTS.md` |
-
-若当前对话环境可以判断 AI 工具，直接使用对应文件名；否则询问用户，默认使用 `CODEBUDDY.md`。
-
-如果用户已经提供了足够的上下文，直接开始，不要过度询问。
-
-## 第二步：创建或补全目录结构
-
-**新项目**：完整创建以下约定文件和目录结构。
-
-**已有项目**：只创建缺失的文件/目录；已存在的文件不覆盖，但可在用户明确要求时更新。
-
-harness 只负责创建以下约定文件，其余目录结构由语言 reference 决定：
-
-```
-<project-name>/
-├── docs/
-│   ├── design/               # 功能/模块设计文档（spec），初始为空目录
-│   ├── debugging/
-│   │   ├── registry.md       # 应用 templates/debugging-registry.md 生成
-│   │   └── records/          # 历史排障记录，初始为空目录
-│   ├── evolution/
-│   │   ├── registry.md       # 应用 templates/evolution-registry.md 生成
-│   │   └── reports/          # 周期分析快照，初始为空目录
-│   ├── observability.md      # 应用 templates/observability.md 生成
-│   ├── testing.md            # 应用 templates/testing.md 生成
-│   └── ssot-registry.md      # 应用 templates/ssot-registry.md 生成
-├── <AI_ENTRY>.md             # 应用 templates/ai-entry.md 生成（CODEBUDDY.md / CLAUDE.md / AGENTS.md）
-└── README.md                 # 应用 templates/README.md 生成
-```
-
-根据用户选择的技术栈，读取对应 reference 文件获取详细目录结构和配置规范：
-
-| 技术栈 | Reference 文件 |
-|--------|---------------|
-| Node.js / TypeScript | [references/node-typescript.md](references/node-typescript.md) |
-| Python | [references/python.md](references/python.md) |
-
-## 第三步：生成基础配置文件
-
-**`README.md`** — 应用 [templates/README.md](templates/README.md)，填写项目名称和简介。
-
-### 代码规范配置
-
-各语言的代码规范配置详见对应 reference 文件，此处不重复。
-
-### 文档体系（必须生成）
-
-#### `<AI_ENTRY>.md` — 项目入口与文档索引
-
-优先使用对应 AI 工具自带的初始化命令生成此文件。仅在工具不支持时，才应用 [templates/ai-entry.md](templates/ai-entry.md) 生成，文件名由第一步确定的 AI 工具决定。
-
-无论入口文件由工具命令生成还是由模板生成，都必须含有「项目阶段」一节，且只写入 [项目阶段](#项目阶段) 确定的那一个取值及其规则。文件已存在时：没有该节就追加，已有该节则保留原取值，除非用户本次明确要改。入口里若还列着未选中的取值，删到只剩当前这一档。
-
-#### `docs/ssot-registry.md` — SSOT 注册表
-
-应用 [templates/ssot-registry.md](templates/ssot-registry.md) 生成，初始为空表。每当抽取公共入口时在此登记一行。
-
-#### `docs/debugging/records/` — 历史排障记录
-
-初始为空目录。每次排查完问题后，以 `<YYYY-MM-DD>-<症状简述>.md` 命名，应用 [templates/debugging-record.md](templates/debugging-record.md) 生成记录，并在 `docs/debugging/registry.md` 补登一行。
-
-**查问题前必须先检索 [`docs/debugging/registry.md`](templates/debugging-registry.md)**，确认是否有同质症状的既有结论——同一个症状不应在仓库里出现两套排查结论（SSOT 原则的延伸）。
-
-#### `docs/evolution/` — 持续进化记录
-
-应用 [templates/evolution-registry.md](templates/evolution-registry.md) 生成 `registry.md`，`reports/` 初始为空。周期分析应用 [templates/evolution-report.md](templates/evolution-report.md)，创建需求/缺陷草稿时应用 [templates/evolution-work-item.md](templates/evolution-work-item.md)。registry 是候选项状态、外部工作项链接和验证结论的唯一信源；报告是按周期生成的不可变证据快照。具体执行协议见 [references/evolution.md](references/evolution.md)。
-
-#### `docs/observability.md` — 可观测性基础设施总览
-
-应用 [templates/observability.md](templates/observability.md) 生成，按技术栈替换日志框架占位符：
-
-| 技术栈 | 日志框架 |
-|--------|---------|
-| Node.js / TypeScript | pino |
-| Python | loguru |
-
-#### `docs/testing.md` — 测试指南
-
-应用 [templates/testing.md](templates/testing.md) 生成，填写实际的运行命令。
-
-#### `docs/design/<module>.md` — 功能/模块设计文档（spec）
-
-每个功能模块对应一个 spec 文件。应用 [templates/design.md](templates/design.md) 生成，遵循其中的唯一信源原则。
-
-模块可以渐进式拆分：当一个 spec 文件过大、职责不清晰时，拆成子模块目录：
-
-```
-docs/design/
-├── auth.md               # 小模块，单文件即可
-└── order/                # 大模块，拆成子模块
-    ├── README.md          # 模块总览：边界、子模块划分、依赖关系
-    ├── checkout.md        # 子模块 spec
-    └── payment.md         # 子模块 spec
-```
-
-拆分时机：单个 spec 文件超过 1000 行，或模块内出现明显独立的子职责，就应考虑拆分。`README.md` 作为父模块总览，只描述整体边界和子模块划分，不重复子模块的细节。
+用户想调整 harness 本身的模板或规范时（如修改 `templates/` 或 `references/` 下的文件、调整目录约定），按用户指示编辑，并在修改后确认是否需要同步更新已有项目中的已生成文件。

@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT"
+
+echo "[pre-commit] Running skill redline checks..."
+python3 scripts/check_skill_redlines.py
+
+# 当红线检查器或测试套件本身发生变更时，同步运行单元测试回归
+if git diff --cached --name-only | grep -Eq '^(scripts/check_skill_redlines\.py|tests/test_skill_redlines\.py)$'; then
+    echo "[pre-commit] Redline checker/tests staged, running pytest..."
+    pytest -q tests/test_skill_redlines.py
+fi
