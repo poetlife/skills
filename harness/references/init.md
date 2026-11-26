@@ -57,12 +57,15 @@ harness 只负责创建以下约定文件，其余目录结构由语言 referenc
 
 > 程序化验证资产优先复用项目既有的单测/集成/E2E 目录；当项目需要独立的评测集、黑盒脚本或运行期验证脚本时，按需建立 `evals/` 目录并在 `docs/evaluation.md` 中索引。
 
-根据用户选择的技术栈，读取对应 reference 文件获取详细目录结构和配置规范：
+根据用户选择的技术栈，读取对应 reference 文件获取详细目录结构、L0 静态门禁与配置规范：
 
 | 技术栈 | Reference 文件 |
 |--------|---------------|
+| Go | [go.md](go.md) |
 | Node.js / TypeScript | [node-typescript.md](node-typescript.md) |
 | Python | [python.md](python.md) |
+
+静态门禁、架构边界守门、自定义检查器、棘轮基线与生成物一致性规范统一见 [static-checks.md](static-checks.md)。
 
 ## 第三步：生成基础配置文件
 
@@ -100,6 +103,7 @@ harness 只负责创建以下约定文件，其余目录结构由语言 referenc
 
 | 技术栈 | 日志框架 |
 |--------|---------|
+| Go | log/slog 或 zap |
 | Node.js / TypeScript | pino |
 | Python | loguru |
 
