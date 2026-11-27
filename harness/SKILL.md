@@ -75,7 +75,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob
 
 ## 静态门禁与架构护栏
 
-将文档里的架构分层、SSOT 唯一入口、可观测性红线、协议/Schema 契约与生成物一致性下沉为构建期 **L0 静态门禁**，在运行测试前自动拦截结构性违规。执行前完整读取 [references/static-checks.md](references/static-checks.md)，按其中的五层门禁、棘轮基线（存量只减不增）、有因豁免（禁止空原因关规则）、守门器自测与一键 `check` 入口规范落地。
+将文档里的架构分层、SSOT 唯一入口、可观测性红线、协议/Schema 契约与生成物一致性下沉为构建期 **L0 静态门禁**，在运行测试前自动拦截结构性违规。执行前完整读取 [references/static-checks.md](references/static-checks.md)，按其中的三层分工边界（内置优先 → 插件备选 → 统一自研）、单一入口与规则 ID、棘轮基线（存量只减不增）、有因豁免（空原因与过期豁免直接报错）、守门器自测与一键 `check` 入口规范落地。
 
 ## 开始排障
 

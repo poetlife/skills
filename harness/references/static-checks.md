@@ -11,22 +11,40 @@
 | 层次 | 守住什么 | 典型手段 |
 |------|----------|----------|
 | **1. 格式与基础静态分析** | 语法错误、未处理错误、死代码、格式漂移、公共 API 缺文档 | Go: `gofumpt` + `govet/errcheck/staticcheck/revive`；TS: `tsc --noEmit` + ESLint + Prettier；Python: `ruff` + `mypy/pyright` |
-| **2. 架构与依赖边界（Import Guard）** | 模块分层纯净度、服务域数据隔离、SSOT 唯一入口不被绕开 | Go: `golangci-lint` `depguard`；TS: `eslint-plugin-import` (`no-restricted-paths`) / `dependency-cruiser`；Python: `import-linter` |
+| **2. 架构与调用边界（Built-in Guard）** | 模块分层纯净度、服务域数据隔离、SSOT 唯一入口不被绕开、禁止裸调用/裸构造黑名单、豁免治理 | Go: `golangci-lint` `depguard` + `forbidigo`（`analyze-types: true`）+ `nolintlint`；TS: ESLint `no-restricted-imports`/`no-restricted-syntax` + `dependency-cruiser`；Python: `import-linter` + `ruff` (`TID`/`BLE`) |
 | **3. 生成物与工具链一致性** | 禁止手改生成物、源码与生成物同步、工具版本一致 | `gen-check` / `wire-check` / `fmt-check`：校验工具版本 → 重新生成 → `git diff --exit-code` |
-| **4. 领域红线自定义检查器（AST / Schema）** | 通用 linter 无法表达的红线（链路不断链、受控并发、配置收敛、协议/Schema 规范） | 项目内轻量自研工具（如 `tools/*check`），解析源码 AST 或编译后的 Schema/Descriptor |
+| **4. 领域红线统一检查器（AST / Schema）** | 主流 linter 内置无法表达的红线（单包语义扩展、跨模块全局不变量、协议/DDL/配置 Schema 规范） | 仓库内**单一入口**的自研检查器（如 `tools/<proj>check`）+ 共用基建；若需 IDE 实时标红，单包语义规则可按需迁入 linter 插件 |
 | **5. 一键聚合门禁入口** | 本地交付与 CI 共用同一裁判，杜绝“漏跑某一项” | 单一命令（如 `make check` / `pnpm check`），固定串联 `fmt-check → gen-check → lint/guardrails → test` |
 
-## 2. 何时编写自定义静态检查器
+## 2. 内置、插件与自研的三层分工边界
 
-不要为了“炫技”写自定义检查器，优先用语言生态现成的 linter 与依赖边界规则。满足以下任一条件时，再沉淀轻量自定义检查器（如 Go `go/ast`、TS Compiler API / ESLint custom rule、Python `ast`、Protobuf `FileDescriptorSet`）：
+不要一上来就写自定义检查器，也不要试图把所有规则硬塞进语言 linter 插件。新增一条静态红线时，按**执行模型**顺次落位：
+
+| 层次 | 判定形态 | 落位原则 | 典型例子 |
+|------|----------|----------|----------|
+| **第一层：主流 linter 内置（优先）** | 格式、惯用法、import 黑名单、**带类型信息的标识符/函数调用/类型构造黑名单**、豁免规范校验 | **无条件优先用内置**，零定制构建成本，且自带 IDE 实时提示与缓存 | Go `depguard` + `forbidigo`（禁 `context.Background` / `os.Getenv` / `&http.Client{}`）+ `nolintlint`；TS ESLint `no-restricted-*`；Python `ruff` |
+| **第二层：单包/单文件自定义语义（插件备选）** | 内置规则表达不了，但仅凭**单个包/文件**的 AST 或类型信息即可判定（如特定语法节点、同包内数据流溯源） | **不需要 IDE 实时提示时，先放进仓库统一自研检查器并标为“插件备选”**，避免过早承担定制 linter 二进制/插件的分发与 IDE 配置成本；当需要 **IDE 实时标红 / `--fix` / 精确类型推导** 时，再迁入 linter 插件（如 `golangci-lint custom`、ESLint plugin） | 禁止裸 `go` 关键字；同包内缓存键命名空间溯源 |
+| **第三层：跨模块 / 全局 / 非目标语言工件（永久自研）** | 需要跨多模块建全局索引、自顶向下反向校验下游调用方，或检查非目标语言文件（`.proto` / SQL DDL / YAML） | **永久归仓库自研检查器**——主流 linter 通常按单模块/单包自底向上分析且只处理单一语言，结构上无法承载 | `.proto` 协议规范、SQL DDL 列宽/命名、跨模块 RPC 注册与实现完备性、跨包配置热读验证、目录白名单 |
+
+### 何时下沉为静态检查
+
+满足以下任一条件时，应将文字约定下沉为 L0 规则（先看第一层能否直接配置，不能再进第二/三层）：
 
 - 同一类反模式在代码评审或与 AI 对话纠偏中**反复出现 ≥2 次**（如散落读取裸环境变量、裸起无上下文/无异常捕获的后台任务、跨层绕开统一封装）；
 - 约束涉及**不可逆风险或全局契约**（资金精度禁用浮点、公开接口禁止信任客户端传入身份字段、写接口必须带幂等键、链路追踪禁止新造根 context）；
-- 现有 linter 语法无法精确表达该规则（例如需要结合函数调用上下文、构建标签或协议扩展字段判断）。
+- 现有 linter 内置语法无法精确表达该规则（例如需要匹配非调用类 AST 节点、跨模块索引、反向调用链或协议扩展字段）。
 
-## 3. 自定义检查器的五条工程标准
+## 3. 自研检查器的六条工程标准
 
-凡是自研或引入的 L0 静态检查器，都应遵循以下工程标准，否则很容易演变成团队抵触或被静默绕过的摆设：
+凡是自研的 L0 静态检查器，都应遵循以下工程标准，否则很容易演变成“一规则一工具”的拷贝漂移、团队抵触或被静默绕过的摆设：
+
+### 3.0 单一入口、稳定规则 ID 与共用基建（防“一规则一工具”漂移）
+
+不要每加一条红线就复制一个独立的 `tools/*check` 二进制——超过 2–3 个后，目录遍历、忽略列表、豁免解析、基线读写与测试夹具必然出现多份拷贝与行为漂移（例如有的查 `cmd/` 有的不查、有的支持函数级豁免有的不支持、退出码不统一）。
+
+- **单一入口 + 共用基建**：所有自研规则收敛到一个命令行入口（如 `tools/<proj>check`），共用文件遍历、AST 解析缓存、豁免解析、棘轮基线、报告格式与退出码，支持按 `-group` / `-rule` 过滤与 `-json` 输出。
+- **稳定规则 ID**：每条红线分配全局唯一的 `<domain>/<rule>` ID（一经发布不随意改名），作为过滤、豁免、基线、文档与统计的共同主键。
+- **规则目录自检**：维护一份全仓规则总表（同时登记“内置 linter”与“自研检查器”承载的规则），并提供 `-list` / `-docs-check` 在 lint 中自动校验代码注册表与文档一致，防止文档漂移。
 
 ### 3.1 棘轮基线（Ratchet Baseline）—— 存量项目渐进治理
 
@@ -41,8 +59,8 @@
 
 真实工程中总存在少量合法边界（如进程启动入口 `main`、常驻 worker 需跟随 `ctx.Done()` 退出、K8s Downward API 环境变量）：
 
-- 行内豁免指令采用显式前缀并强制附带**非空原因**，如 `//<checker>:allow <原因>`（支持写在同行或紧邻上一行）。
-- **空原因的豁免不予承认**（解析器直接忽略），防止豁免指令退化成随手关闭规则的开关。
+- 行内豁免指令采用统一前缀、指定精确规则 ID 并强制附带**非空原因**，如 `//<proj>check:allow <rule-id> <原因>`（支持写在同行、紧邻上一行或函数声明行）；禁止整文件豁免（确需存量豁免走棘轮基线）。
+- **空原因、未知规则 ID 或未使用/过期豁免直接报错**（不要静默忽略），防止豁免指令退化成随手关闭规则的开关或残留死注释。主流 linter 侧同理开启豁免治理（如 Go 启用 `nolintlint` 的 `require-specific` + `require-explanation` + `allow-unused: false`）。
 - 在 `<AI_ENTRY>.md` 中约定：AI 不得为让检查变绿而滥用豁免注释或放宽通用 linter 的 `//nolint` / `@ts-ignore` / `# noqa`。
 
 ### 3.3 精准排除范围
@@ -81,14 +99,14 @@
   - 个案行为错误 → 沉淀为 **L1 单测 / 集成 / 黑盒验证**（见 [evaluation.md](evaluation.md)）；
   - 共性结构反模式 → 沉淀为 **L0 静态检查规则**，从根源消灭整类错误。
 
-## 6. 实战示例：典型自定义检查器矩阵
+## 6. 实战示例：三层静态门禁落地矩阵
 
-以下仅演示一个后端多服务仓库如何把文字红线拆解为具体检查器，不同项目应按自身架构红线按需裁剪：
+以下演示一个后端多服务仓库如何按三层边界拆解文字红线，不同项目应按自身技术栈与架构红线裁剪：
 
-| 红线来源 | 落地检查器 | 检查内容 | 治理机制 |
+| 红线来源 | 层次与载体 | 检查内容 | 治理机制 |
 |----------|------------|----------|----------|
-| 模块分层与域隔离 | `depguard`（linter 内置） | 禁止跨服务直连他域 DB 模型；禁止 `entity` 依赖传输层/ORM；禁止绕开统一错误包 | 配置 + 反向探针测试 |
-| 可观测性与安全并发 | `ctxcheck`（源码 AST） | 禁止业务代码裸用 `context.Background/TODO` 与裸 `go` 关键字 | `//ctxcheck:allow <原因>` |
-| 配置 SSOT 收敛 | `envcheck`（源码 AST） | 禁止业务代码新增直接环境变量读取，收敛至配置中心 | `//envcheck:allow <原因>` + 棘轮基线 |
-| 协议/API 契约 | `protocheck`（Descriptor） | 禁黑盒 JSON/Any、禁金融浮点、枚举零值 `_UNSPECIFIED`、公开/读写接口契约、扩展号唯一 | 棘轮基线 + `--strict` 模式 |
-| 生成物同步 | `fmt-check` / `gen-check` / `wire-check` | 工具版本校验 + 重新生成 + `git diff --exit-code` | 纳入统一 `make check` |
+| 模块分层与域隔离 | 一层：`depguard`（linter 内置） | 禁止跨服务直连他域 DB 模型；禁止 `entity` 依赖传输层/ORM；禁止绕开统一错误包 | 配置 + 反向探针测试 |
+| 调用/构造黑名单 | 一层：`forbidigo` + `nolintlint`（linter 内置） | 禁止业务代码裸用 `context.Background/TODO`、直接读环境变量、裸构造 `http.Client` | `//nolint:forbidigo // 原因`（强制非空原因 + 过期报错） |
+| 单包语义红线 | 二层：统一检查器（**插件备选**） | 禁止裸 `go` 关键字；同包内缓存键必须溯源到统一命名空间构造函数 | `//<proj>check:allow <rule-id> <原因>`（需 IDE 提示时再迁入插件） |
+| 协议 / DDL / 跨模块契约 | 三层：统一检查器（永久自研） | 禁黑盒 JSON/Any、禁金融浮点、DDL 列宽一致、跨模块 RPC 注册与实现完备、跨包配置热读验证 | 棘轮基线（stale 报错）+ 规则目录 `-docs-check` |
+| 生成物同步 | 生成物门禁：`fmt-check` / `gen-check` / `wire-check` | 工具版本校验 + 重新生成 + `git diff --exit-code` | 纳入统一 `make check` |
