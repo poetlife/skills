@@ -89,7 +89,7 @@ harness 只负责创建以下约定文件，其余目录结构由语言 referenc
 
 #### `docs/debugging/records/` — 历史排障记录
 
-初始为空目录。每次排查完问题后，以 `<YYYY-MM-DD>-<症状简述>.md` 命名，应用 [../templates/debugging-record.md](../templates/debugging-record.md) 生成记录，并在 `docs/debugging/registry.md` 补登一行。
+初始为空目录。属于按需检索的 case 库：每次排查完问题后，以 `<YYYY-MM-DD>-<症状简述>.md` 命名，应用 [../templates/debugging-record.md](../templates/debugging-record.md) 生成简短记录，并在 `docs/debugging/registry.md` 表格中补登一行（严格保持表格格式，不把单篇 record 加入 `<AI_ENTRY>.md` 的主文档索引）。
 
 **查问题前必须先检索 [`docs/debugging/registry.md`](../templates/debugging-registry.md)**，确认是否有同质症状的既有结论——同一个症状不应在仓库里出现两套排查结论（SSOT 原则的延伸）。
 
@@ -117,7 +117,7 @@ harness 只负责创建以下约定文件，其余目录结构由语言 referenc
 
 #### `docs/design/<module>.md` — 功能/模块设计文档（spec）
 
-每个功能模块对应一个 spec 文件。应用 [../templates/design.md](../templates/design.md) 生成，遵循其中的唯一信源原则。
+按稳定业务域/子系统建文件（不为单次评审、修复批次或零散小补丁单开文件）。应用 [../templates/design.md](../templates/design.md) 生成，遵循其中的唯一信源与现态原则——更新一律就地改写现态，不堆叠批次流水，废弃文档直接删除交给 Git 留档。
 
 模块可以渐进式拆分：当一个 spec 文件过大、职责不清晰时，拆成子模块目录：
 

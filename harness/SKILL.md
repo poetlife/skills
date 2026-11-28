@@ -50,6 +50,13 @@ allowed-tools: Read, Write, Edit, Bash, Glob
 
 本标志约束的是后续对既有契约的改动。初始化时「已有文件不覆盖」仍然有效，不因 `greenfield` 而覆盖已有内容。
 
+## 文档边界（现态 vs 索引库）
+
+Git 存过程与历史，`docs/` 只存两类文档：
+
+1. **现态文档**（`<AI_ENTRY>.md`、`docs/design/`、`docs/observability.md`、`docs/evaluation.md`、`docs/testing.md`、`docs/ssot-registry.md`）：只描述系统当前契约与约束。禁止把实施计划、验收流水、单次评审复核、命令 `.log` 常驻提交到 `docs/`；更新一律**就地覆盖现态**，禁止文首堆叠批次流水；被替代旧文档直接**删除**，不留“历史参考”占位。
+2. **索引库**（`docs/debugging/`、`docs/evolution/`）：按需检索的 case 库。`<AI_ENTRY>.md` 只挂 `registry.md`，单篇不上主索引；`registry.md` 严格保持表格格式。
+
 ## 初始化与补全项目
 
 支持全新项目搭建与已有项目增量补全（不覆盖已有文件）。执行前完整读取 [references/init.md](references/init.md)，按其中的信息收集、目录结构、技术栈规范与模板清单落地。
@@ -58,9 +65,9 @@ allowed-tools: Read, Write, Edit, Bash, Glob
 
 1. 读取项目入口文件的 `project-stage`（见 [项目阶段](#项目阶段)）。`compatible` 下不得写入破坏既有行为与既有验证契约的 spec；`confirm` 下先确认再写；`greenfield` 下可以直接写，仍须在 spec 里写明新行为。入口没有该标志时，先按该节补齐再动笔。
 2. 询问模块名称（若未提供），并确认当前已知的**明确验证目标**（若用户未提供，先对齐可检验目标草案，再动笔写 spec；后续协作中发现的新约束可随时追加）。
-3. 检查 `docs/design/` 下是否已有同名文件，避免重复创建。
-4. 应用 [templates/design.md](templates/design.md)，填写模块名与验证目标，将验证目标形式化到「验证目标与形式化契约」节，其余占位符留给用户补充或共同确认。
-5. 若同名模块已存在 spec，询问是更新还是拆分子模块；若涉及行为变更，同时明确对应程序化验证（单测、集成测试、黑盒或 `evals/`）中需要新增或同步演化的项。
+3. 只按**稳定业务域/子系统**建 spec，不为单次评审、修复批次或小补丁单开文件；检查 `docs/design/` 避免重复。
+4. 应用 [templates/design.md](templates/design.md)，将验证目标形式化到「验证目标与形式化契约」节，只写现态契约（不写时点验收快照或批次流水）。
+5. 同名模块已存在时，询问就地更新或拆分子模块；涉及行为变更时同步明确需新增或演化的程序化验证项。
 
 ## 需求验证与评测（Evaluation）
 
@@ -89,9 +96,9 @@ allowed-tools: Read, Write, Edit, Bash, Glob
 
 1. 询问症状简述（若未提供），用于文件命名。
 2. **先检索** `docs/debugging/registry.md`，确认是否已有同质症状的既有结论；若有，告知用户并询问是补充已有记录还是新建。
-3. 以 `<YYYY-MM-DD>-<症状简述>.md` 命名，应用 [templates/debugging-record.md](templates/debugging-record.md) 生成文件到 `docs/debugging/records/`。
+3. 以 `<YYYY-MM-DD>-<症状简述>.md` 命名，应用 [templates/debugging-record.md](templates/debugging-record.md) 写简短记录到 `docs/debugging/records/`。
 4. 确认该故障已沉淀为可复跑的回归验证用例（单测、集成或 `evals/`），并将路径记入「预防措施」；暂无法程序化时写明原因。
-5. 在 `docs/debugging/registry.md` 补登一行（症状关键词、根因摘要、文件链接）。
+5. 在 `docs/debugging/registry.md` 表格中补登一行（保持表格格式，单篇不上主文档索引）。
 
 ## 更新文档
 
